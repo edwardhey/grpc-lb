@@ -1,12 +1,13 @@
 package main
 
 import (
-	grpclb "github.com/liyue201/grpc-lb"
-	"github.com/liyue201/grpc-lb/examples/proto"
-	"github.com/liyue201/grpc-lb/registry/consul"
+	"log"
+
+	grpclb "github.com/edwardhey/grpc-lb"
+	"github.com/edwardhey/grpc-lb/examples/proto"
+	"github.com/edwardhey/grpc-lb/registry/consul"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"log"
 )
 
 func main() {

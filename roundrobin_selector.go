@@ -6,14 +6,14 @@ import (
 )
 
 type RoundRobinSelector struct {
-	baseSelector
+	BaseSelector
 	next int
 }
 
 func NewRoundRobinSelector() Selector {
 	return &RoundRobinSelector{
 		next:         0,
-		baseSelector: baseSelector{addrMap: make(map[string]*AddrInfo)},
+		BaseSelector: BaseSelector{addrMap: make(map[string]*AddrInfo)},
 	}
 }
 

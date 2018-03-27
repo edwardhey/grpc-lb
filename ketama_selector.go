@@ -9,7 +9,7 @@ import (
 )
 
 type KetamaSelector struct {
-	baseSelector
+	BaseSelector
 	hash      *Ketama
 	ketamaKey string
 }
@@ -26,7 +26,7 @@ func NewKetamaSelector(ketamaKey string) Selector {
 	return &KetamaSelector{
 		hash:         NewKetama(10, nil),
 		ketamaKey:    ketamaKey,
-		baseSelector: baseSelector{addrMap: make(map[string]*AddrInfo)},
+		BaseSelector: BaseSelector{addrMap: make(map[string]*AddrInfo)},
 	}
 }
 
@@ -41,7 +41,7 @@ func (s *KetamaSelector) upWrapAddr(addr string) string {
 
 func (s *KetamaSelector) Add(addr grpc.Address) error {
 	fmt.Println("add", addr.Addr)
-	err := s.baseSelector.Add(addr)
+	err := s.BaseSelector.Add(addr)
 	if err == nil {
 		a, _ := s.addrMap[addr.Addr]
 		for i := 0; i < a.weight; i++ {
@@ -53,7 +53,7 @@ func (s *KetamaSelector) Add(addr grpc.Address) error {
 
 func (s *KetamaSelector) Delete(addr grpc.Address) error {
 	a, ok := s.addrMap[addr.Addr]
-	err := s.baseSelector.Delete(addr)
+	err := s.BaseSelector.Delete(addr)
 	if err == nil {
 		if ok {
 			for i := 0; i < a.weight; i++ {

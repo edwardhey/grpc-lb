@@ -9,14 +9,14 @@ import (
 )
 
 type RandomSelector struct {
-	baseSelector
+	BaseSelector
 	r *rand.Rand
 }
 
 func NewRandomSelector() Selector {
 	return &RandomSelector{
 		r:            rand.New(rand.NewSource(time.Now().UnixNano())),
-		baseSelector: baseSelector{addrMap: make(map[string]*AddrInfo)},
+		BaseSelector: BaseSelector{addrMap: make(map[string]*AddrInfo)},
 	}
 }
 

@@ -22,12 +22,12 @@ var AddrExistErr = errors.New("addr exist")
 var AddrDoseNotExistErr = errors.New("addr does not exist")
 var NoAvailableAddressErr = errors.New("no available address")
 
-type baseSelector struct {
+type BaseSelector struct {
 	addrs   []string
 	addrMap map[string]*AddrInfo
 }
 
-func (b *baseSelector) Add(addr grpc.Address) error {
+func (b *BaseSelector) Add(addr grpc.Address) error {
 	for _, v := range b.addrs {
 		if addr.Addr == v {
 			return AddrExistErr
@@ -56,7 +56,7 @@ func (b *baseSelector) Add(addr grpc.Address) error {
 	return nil
 }
 
-func (b *baseSelector) Delete(addr grpc.Address) error {
+func (b *BaseSelector) Delete(addr grpc.Address) error {
 
 	firstIdx := -1
 	lastIdx := -1
@@ -81,7 +81,7 @@ func (b *baseSelector) Delete(addr grpc.Address) error {
 	return AddrDoseNotExistErr
 }
 
-func (b *baseSelector) Up(addr grpc.Address) (cnt int, connected bool) {
+func (b *BaseSelector) Up(addr grpc.Address) (cnt int, connected bool) {
 
 	a, ok := b.addrMap[addr.Addr]
 	if ok {
@@ -101,7 +101,7 @@ func (b *baseSelector) Up(addr grpc.Address) (cnt int, connected bool) {
 	return cnt, false
 }
 
-func (b *baseSelector) Down(addr grpc.Address) error {
+func (b *BaseSelector) Down(addr grpc.Address) error {
 
 	a, ok := b.addrMap[addr.Addr]
 	if ok {
@@ -110,7 +110,7 @@ func (b *baseSelector) Down(addr grpc.Address) error {
 	return nil
 }
 
-func (b *baseSelector) AddrList() []grpc.Address {
+func (b *BaseSelector) AddrList() []grpc.Address {
 	list := []grpc.Address{}
 	for _, v := range b.addrMap {
 		list = append(list, v.addr)
@@ -118,11 +118,11 @@ func (b *baseSelector) AddrList() []grpc.Address {
 	return list
 }
 
-func (b *baseSelector) Get(ctx context.Context) (addr grpc.Address, err error) {
+func (b *BaseSelector) Get(ctx context.Context) (addr grpc.Address, err error) {
 	return
 }
 
-func (b *baseSelector) Put(addr string) error {
+func (b *BaseSelector) Put(addr string) error {
 	a, ok := b.addrMap[addr]
 	if ok {
 		a.load--

@@ -2,9 +2,9 @@ package main
 
 import (
 	etcd "github.com/coreos/etcd/client"
-	grpclb "github.com/liyue201/grpc-lb"
-	"github.com/liyue201/grpc-lb/examples/proto"
-	registry "github.com/liyue201/grpc-lb/registry/etcd"
+	grpclb "github.com/edwardhey/grpc-lb"
+	"github.com/edwardhey/grpc-lb/examples/proto"
+	registry "github.com/edwardhey/grpc-lb/registry/etcd"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
