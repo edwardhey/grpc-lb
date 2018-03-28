@@ -2,6 +2,8 @@ package etcd
 
 import (
 	"encoding/json"
+	"time"
+
 	etcd3 "github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"golang.org/x/net/context"
@@ -11,11 +13,12 @@ import (
 
 // EtcdWatcher is the implementation of grpc.naming.Watcher
 type EtcdWatcher struct {
-	key     string
-	client  *etcd3.Client
-	updates []*naming.Update
-	ctx     context.Context
-	cancel  context.CancelFunc
+	key      string
+	client   *etcd3.Client
+	updateCH chan *naming.Update
+	ctx      context.Context
+	cancel   context.CancelFunc
+	hbTimes  map[string]time.Time
 }
 
 func (w *EtcdWatcher) Close() {
@@ -25,60 +28,48 @@ func (w *EtcdWatcher) Close() {
 func newEtcdWatcher(key string, cli *etcd3.Client) naming.Watcher {
 	ctx, cancel := context.WithCancel(context.Background())
 	w := &EtcdWatcher{
-		key:     key,
-		client:  cli,
-		ctx:     ctx,
-		updates: make([]*naming.Update, 0),
-		cancel:  cancel,
+		key:      key,
+		client:   cli,
+		ctx:      ctx,
+		updateCH: make(chan *naming.Update, 1000),
+		hbTimes:  make(map[string]time.Time),
+		cancel:   cancel,
 	}
+
+	go func() {
+		rch := w.client.Watch(w.ctx, w.key, etcd3.WithPrefix())
+		for wresp := range rch {
+			for _, ev := range wresp.Events {
+				key := string(ev.Kv.Key)
+				switch ev.Type {
+				case mvccpb.PUT:
+					nodeData := NodeData{}
+					err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
+					if err != nil {
+						grpclog.Println("Parse node data error:", err)
+						continue
+					}
+					t, ok := w.hbTimes[key]
+					if !ok || time.Now().Sub(t) > time.Second*300 {
+						w.updateCH <- &naming.Update{Op: naming.Add, Addr: nodeData.Addr, Metadata: &nodeData.Metadata}
+						w.hbTimes[key] = time.Now()
+					}
+				case mvccpb.DELETE:
+					nodeData := NodeData{
+						Addr: key,
+					}
+					delete(w.hbTimes, key)
+					w.updateCH <- &naming.Update{Op: naming.Delete, Addr: nodeData.Addr, Metadata: &nodeData.Metadata}
+				}
+
+			}
+		}
+	}()
 	return w
 }
 
-func (w *EtcdWatcher) Next() ([]*naming.Update, error) {
-	updates := make([]*naming.Update, 0)
-
-	if len(w.updates) == 0 {
-		// query addresses from etcd
-		resp, err := w.client.Get(w.ctx, w.key, etcd3.WithPrefix())
-		if err == nil {
-			addrs := extractAddrs(resp)
-			if len(addrs) > 0 {
-				for _, v := range addrs {
-					updates = append(updates, &naming.Update{Op: naming.Add, Addr: v.Addr, Metadata: &v.Metadata})
-				}
-				w.updates = updates
-				return updates, nil
-			}
-		} else {
-			grpclog.Println("Etcd Watcher Get key error:", err)
-		}
-	}
-
-	// generate etcd Watcher
-	rch := w.client.Watch(w.ctx, w.key, etcd3.WithPrefix())
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			switch ev.Type {
-			case mvccpb.PUT:
-				nodeData := NodeData{}
-				err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
-				if err != nil {
-					grpclog.Println("Parse node data error:", err)
-					continue
-				}
-				updates = append(updates, &naming.Update{Op: naming.Add, Addr: nodeData.Addr, Metadata: &nodeData.Metadata})
-			case mvccpb.DELETE:
-				nodeData := NodeData{}
-				err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
-				if err != nil {
-					grpclog.Println("Parse node data error:", err)
-					continue
-				}
-				updates = append(updates, &naming.Update{Op: naming.Delete, Addr: nodeData.Addr, Metadata: &nodeData.Metadata})
-			}
-		}
-	}
-	return updates, nil
+func (w *EtcdWatcher) Next() (updates []*naming.Update, err error) {
+	return append(updates, <-w.updateCH), nil
 }
 
 func extractAddrs(resp *etcd3.GetResponse) []NodeData {

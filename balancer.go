@@ -1,11 +1,12 @@
 package grpclb
 
 import (
+	"sync"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/naming"
-	"sync"
 )
 
 var DefaultSelector = NewRandomSelector()

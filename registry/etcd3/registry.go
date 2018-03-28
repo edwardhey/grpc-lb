@@ -2,11 +2,13 @@ package etcd
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
+
 	etcd3 "github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/grpclog"
-	"time"
 )
 
 type EtcdReigistry struct {
@@ -58,6 +60,7 @@ func NewRegistry(option Option) (*EtcdReigistry, error) {
 func (e *EtcdReigistry) Register() error {
 
 	insertFunc := func() error {
+		fmt.Println("hb")
 		resp, _ := e.etcd3Client.Grant(e.ctx, int64(e.ttl))
 		_, err := e.etcd3Client.Get(e.ctx, e.key)
 		if err != nil {
@@ -69,13 +72,13 @@ func (e *EtcdReigistry) Register() error {
 				grpclog.Printf("grpclb: key '%s' connect to etcd3 failed: %s", e.key, err.Error())
 			}
 			return err
-		} else {
-			// refresh set to true for not notifying the watcher
-			if _, err := e.etcd3Client.Put(e.ctx, e.key, e.value, etcd3.WithLease(resp.ID)); err != nil {
-				grpclog.Printf("grpclb: refresh key '%s' with ttl to etcd3 failed: %s", e.key, err.Error())
-				return err
-			}
 		}
+		// refresh set to true for not notifying the watcher
+		if _, err := e.etcd3Client.Put(e.ctx, e.key, e.value, etcd3.WithLease(resp.ID)); err != nil {
+			grpclog.Printf("grpclb: refresh key '%s' with ttl to etcd3 failed: %s", e.key, err.Error())
+			return err
+		}
+		// }
 		return nil
 	}
 
@@ -83,8 +86,7 @@ func (e *EtcdReigistry) Register() error {
 	if err != nil {
 		return err
 	}
-
-	ticker := time.NewTicker(e.ttl / 5)
+	ticker := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-ticker.C:
