@@ -3,9 +3,10 @@ package grpclb
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"strings"
 )
 
 type KetamaSelector struct {
@@ -44,7 +45,7 @@ func (s *KetamaSelector) Add(addr grpc.Address) error {
 	err := s.BaseSelector.Add(addr)
 	if err == nil {
 		a, _ := s.addrMap[addr.Addr]
-		for i := 0; i < a.weight; i++ {
+		for i := 0; i < a.Weight; i++ {
 			s.hash.Add(s.wrapAddr(addr.Addr, i))
 		}
 	}
@@ -56,7 +57,7 @@ func (s *KetamaSelector) Delete(addr grpc.Address) error {
 	err := s.BaseSelector.Delete(addr)
 	if err == nil {
 		if ok {
-			for i := 0; i < a.weight; i++ {
+			for i := 0; i < a.Weight; i++ {
 				s.hash.Remove(s.wrapAddr(addr.Addr, i))
 			}
 		}
@@ -77,9 +78,9 @@ func (s *KetamaSelector) Get(ctx context.Context) (addr grpc.Address, err error)
 			for _, v := range s.addrs {
 				if v == targetAddr {
 					if addrInfo, ok := s.addrMap[v]; ok {
-						if addrInfo.connected {
-							addrInfo.load++
-							return addrInfo.addr, nil
+						if addrInfo.Connected {
+							addrInfo.Load++
+							return addrInfo.Addr, nil
 						}
 					}
 				}

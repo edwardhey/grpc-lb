@@ -56,7 +56,7 @@ func (b *BaseSelector) Add(addr grpc.Address) error {
 		}
 	}
 
-	b.addrMap[addr.Addr] = &AddrInfo{addr: addr, weight: weight, connected: false}
+	b.addrMap[addr.Addr] = &AddrInfo{Addr: addr, Weight: weight, Connected: false}
 
 	for i := 0; i < weight; i++ {
 		b.addrs = append(b.addrs, addr.Addr)
@@ -93,13 +93,13 @@ func (b *BaseSelector) Up(addr grpc.Address) (cnt int, connected bool) {
 
 	a, ok := b.addrMap[addr.Addr]
 	if ok {
-		if a.connected {
+		if a.Connected {
 			return cnt, true
 		}
-		a.connected = true
+		a.Connected = true
 	}
 	for _, v := range b.addrMap {
-		if v.connected {
+		if v.Connected {
 			cnt++
 			if cnt > 1 {
 				break
@@ -109,11 +109,15 @@ func (b *BaseSelector) Up(addr grpc.Address) (cnt int, connected bool) {
 	return cnt, false
 }
 
+func (b *BaseSelector) GetAddrMap() map[string]*AddrInfo {
+	return b.addrMap
+}
+
 func (b *BaseSelector) Down(addr grpc.Address) error {
 
 	a, ok := b.addrMap[addr.Addr]
 	if ok {
-		a.connected = false
+		a.Connected = false
 	}
 	return nil
 }
@@ -121,7 +125,7 @@ func (b *BaseSelector) Down(addr grpc.Address) error {
 func (b *BaseSelector) AddrList() []grpc.Address {
 	list := []grpc.Address{}
 	for _, v := range b.addrMap {
-		list = append(list, v.addr)
+		list = append(list, v.Addr)
 	}
 	return list
 }
@@ -133,7 +137,7 @@ func (b *BaseSelector) Get(ctx context.Context) (addr grpc.Address, err error) {
 func (b *BaseSelector) Put(addr string) error {
 	a, ok := b.addrMap[addr]
 	if ok {
-		a.load--
+		a.Load--
 	}
 	return nil
 }

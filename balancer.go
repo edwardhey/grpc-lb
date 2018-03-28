@@ -12,10 +12,10 @@ import (
 var DefaultSelector = NewRandomSelector()
 
 type AddrInfo struct {
-	addr      grpc.Address
-	weight    int    //load weigth
-	load      uint64 //current number of requests
-	connected bool
+	Addr      grpc.Address
+	Weight    int    //load weigth
+	Load      uint64 //current number of requests
+	Connected bool
 }
 
 type balancer struct {

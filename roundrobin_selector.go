@@ -30,18 +30,17 @@ func (r *RoundRobinSelector) Get(ctx context.Context) (addr grpc.Address, err er
 	for {
 		a := r.addrs[next]
 		next = (next + 1) % len(r.addrs)
-
 		if addrInfo, ok := r.addrMap[a]; ok {
-			if addrInfo.connected {
-				addr = addrInfo.addr
-				addrInfo.load++
+			if addrInfo.Connected {
+				addr = addrInfo.Addr
+				addrInfo.Load++
 				r.next = next
 				return
 			}
 			if next == r.next {
 				// Has iterated all the possible address but none is connected.
-				addr = addrInfo.addr
-				addrInfo.load++
+				addr = addrInfo.Addr
+				addrInfo.Load++
 				r.next = next
 				return
 			}

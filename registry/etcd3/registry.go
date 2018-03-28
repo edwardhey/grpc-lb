@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	etcd3 "github.com/coreos/etcd/clientv3"
@@ -60,7 +59,6 @@ func NewRegistry(option Option) (*EtcdReigistry, error) {
 func (e *EtcdReigistry) Register() error {
 
 	insertFunc := func() error {
-		fmt.Println("hb")
 		resp, _ := e.etcd3Client.Grant(e.ctx, int64(e.ttl))
 		_, err := e.etcd3Client.Get(e.ctx, e.key)
 		if err != nil {

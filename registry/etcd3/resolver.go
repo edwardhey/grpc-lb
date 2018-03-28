@@ -3,6 +3,7 @@ package etcd
 import (
 	"errors"
 	"fmt"
+
 	etcd3 "github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc/naming"
 )

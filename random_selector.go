@@ -2,10 +2,11 @@ package grpclb
 
 import (
 	"errors"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"math/rand"
 	"time"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 type RandomSelector struct {
@@ -31,9 +32,9 @@ func (r *RandomSelector) Get(ctx context.Context) (addr grpc.Address, err error)
 	for i := 0; i < size; i++ {
 		addr := r.addrs[(idx+i)%size]
 		if addrInfo, ok := r.addrMap[addr]; ok {
-			if addrInfo.connected {
-				addrInfo.load++
-				return addrInfo.addr, nil
+			if addrInfo.Connected {
+				addrInfo.Load++
+				return addrInfo.Addr, nil
 			}
 		}
 	}
