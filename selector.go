@@ -2,9 +2,10 @@ package grpclb
 
 import (
 	"errors"
+	"strconv"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"strconv"
 )
 
 type Selector interface {
@@ -25,6 +26,13 @@ var NoAvailableAddressErr = errors.New("no available address")
 type BaseSelector struct {
 	addrs   []string
 	addrMap map[string]*AddrInfo
+}
+
+func NewBaseSelector() *BaseSelector {
+	return &BaseSelector{
+		addrs:   make([]string, 5),
+		addrMap: make(map[string]*AddrInfo, 5),
+	}
 }
 
 func (b *BaseSelector) Add(addr grpc.Address) error {
